@@ -160,7 +160,7 @@ analysis_skill = st.sidebar.selectbox(
 if analysis_skill == "Gender and Women Focus":
     st.sidebar.info(
         "This skill prioritizes women-led mobilizations, gender dynamics, risks, "
-        "rights claims, and protection concerns grounded in the ACLED notes."
+        "rights claims, and protection concerns grounded in the event notes."
     )
 
 api_key_input = st.sidebar.text_input(
@@ -177,12 +177,14 @@ if api_key_input:
     elif llm_provider == "Gemini":
         os.environ["GEMINI_API_KEY"] = api_key_input
 
-st.title("ACLED Report Generator")
-st.markdown("Upload an ACLED CSV file to filter data, generate AI analysis, and download the PDF report.")
+st.title("Event Source Reporter")
+st.markdown(
+    "Upload a structured event CSV to filter records, generate AI analysis, and download a PDF report."
+)
 st.caption(f"Current model: `{model_name}` | Current analysis skill: `{analysis_skill}`")
 
 # File uploader
-uploaded_file = st.file_uploader("Upload ACLED CSV file", type=["csv"])
+uploaded_file = st.file_uploader("Upload source CSV file", type=["csv"])
 
 if uploaded_file is not None:
     # Load data

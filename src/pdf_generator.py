@@ -5,7 +5,7 @@ from pathlib import Path
 class PDFReport(FPDF):
     def header(self):
         self.set_font('Arial', 'B', 15)
-        self.cell(0, 10, 'Reporte de Analisis de Conflictos (ACLED)', 0, 1, 'C')
+        self.cell(0, 10, 'Event Source Reporter', 0, 1, 'C')
         self.ln(5)
         
     def footer(self):
@@ -19,7 +19,7 @@ def generate_pdf_report(country: str, report_text: str, output_path: str):
     
     # Title
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, f"Analisis para: {country}", 0, 1, 'L')
+    pdf.cell(0, 10, f"Analysis for: {country}", 0, 1, 'L')
     pdf.set_font("Arial", 'I', 10)
     pdf.cell(0, 10, f"Generado el: {datetime.datetime.now().strftime('%Y-%m-%d')}", 0, 1, 'L')
     pdf.ln(5)
@@ -42,7 +42,7 @@ def generate_pdf_bytes(country: str, report_text: str) -> bytes:
     pdf.add_page()
 
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, f"Analisis para: {country}", 0, 1, 'L')
+    pdf.cell(0, 10, f"Analysis for: {country}", 0, 1, 'L')
     pdf.set_font("Arial", 'I', 10)
     pdf.cell(0, 10, f"Generado el: {datetime.datetime.now().strftime('%Y-%m-%d')}", 0, 1, 'L')
     pdf.ln(5)

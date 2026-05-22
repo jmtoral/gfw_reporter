@@ -32,6 +32,8 @@ def save_report_bundle(result: dict, base_dir: str = "saved_reports") -> Path:
         "other_events_count": result["other_events_count"],
         "saved_at": datetime.now().isoformat(timespec="seconds"),
     }
+    if result.get("usage"):
+        metadata["usage"] = result["usage"]
     metadata_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False), encoding="utf-8")
 
     return report_dir

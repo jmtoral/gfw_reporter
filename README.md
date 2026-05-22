@@ -11,6 +11,7 @@ The current implementation is optimized for ACLED-like CSV files, especially sou
 - Generates visual summaries for time trends, top actors, top geographies, and map distribution.
 - Produces an LLM-written analytical report using OpenAI, Anthropic, or Gemini.
 - Supports a dedicated `Gender and Women Focus` analysis skill with a fixed report structure.
+- Accepts optional free-text contextual notes, such as newspaper excerpts or NGO summaries, before report generation.
 - Exports the result to PDF.
 - Keeps the latest result visible in the app after download.
 - Allows saving report bundles locally as Markdown, PDF, and metadata.
@@ -66,6 +67,57 @@ GEMINI_API_KEY=your_key
 
 You can also paste the selected provider key directly in the Streamlit sidebar at runtime.
 
+## Run on another computer
+
+To use this project on someone else's computer:
+
+1. Install Python 3.11 or 3.12.
+2. Clone the repository:
+
+```bash
+git clone https://github.com/jmtoral/gfw_reporter.git
+cd gfw_reporter
+```
+
+3. Create and activate a virtual environment.
+
+On Windows:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+On macOS or Linux:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+4. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+5. Either:
+
+- export an API key as an environment variable, or
+- paste the provider key directly into the sidebar once the app is running
+
+6. Start the app:
+
+```bash
+streamlit run app.py
+```
+
+7. Open the local URL shown by Streamlit, usually:
+
+```text
+http://localhost:8501
+```
+
 ## Run the app
 
 ```bash
@@ -91,6 +143,15 @@ admin2
 latitude
 longitude
 ```
+
+## Typical workflow
+
+1. Upload a structured source CSV.
+2. Select a country.
+3. Optionally paste additional context such as newspaper notes, NGO summaries, or field observations.
+4. Choose the provider and analysis skill.
+5. Generate the report.
+6. Download the PDF or save the report bundle locally.
 
 ## How to adapt this to other sources
 

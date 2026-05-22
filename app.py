@@ -18,6 +18,9 @@ if "report_result" not in st.session_state:
 if "save_message" not in st.session_state:
     st.session_state.save_message = None
 
+if "usage_history" not in st.session_state:
+    st.session_state.usage_history = []
+
 
 def render_report_result(result):
     st.write("---")
@@ -100,6 +103,22 @@ def render_report_result(result):
     st.subheader("Report Draft")
     st.markdown(result["report_text"])
 
+    usage = result.get("usage")
+    if usage:
+        st.markdown("#### LLM Usage")
+        col_u1, col_u2, col_u3, col_u4 = st.columns(4)
+        col_u1.metric("Input tokens", usage["input_tokens"] if usage["input_tokens"] is not None else "N/A")
+        col_u2.metric("Output tokens", usage["output_tokens"] if usage["output_tokens"] is not None else "N/A")
+        col_u3.metric("Total tokens", usage["total_tokens"] if usage["total_tokens"] is not None else "N/A")
+        col_u4.metric("Latency (s)", usage["latency_seconds"])
+
+        estimated_cost = usage.get("estimated_cost_usd")
+        if estimated_cost is not None:
+            st.caption(f"Estimated cost: `${estimated_cost:.6f} USD`")
+            st.caption("Note: this is an approximate estimate based on hardcoded official pricing references and may drift if providers update rates.")
+        else:
+            st.caption("Estimated cost: not configured for this model.")
+
     st.download_button(
         label="📄 Download PDF Report",
         data=result["pdf_bytes"],
@@ -113,6 +132,48 @@ def render_report_result(result):
 
     if st.session_state.save_message:
         st.success(st.session_state.save_message)
+
+
+def render_usage_dashboard():
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Usage Dashboard")
+
+    history = st.session_state.usage_history
+    if not history:
+        st.sidebar.caption("No LLM runs recorded yet.")
+        return
+
+    total_runs = len(history)
+    total_input = sum(item.get("input_tokens") or 0 for item in history)
+    total_output = sum(item.get("output_tokens") or 0 for item in history)
+    total_tokens = sum(item.get("total_tokens") or 0 for item in history)
+    total_cost = sum(item.get("estimated_cost_usd") or 0 for item in history)
+
+    st.sidebar.metric("Runs", total_runs)
+    st.sidebar.metric("Total tokens", total_tokens)
+    st.sidebar.caption(f"Input tokens: {total_input} | Output tokens: {total_output}")
+    if any(item.get("estimated_cost_usd") is not None for item in history):
+        st.sidebar.caption(f"Estimated total cost: `${total_cost:.6f} USD`")
+        st.sidebar.caption("Approximate values based on hardcoded pricing references.")
+    else:
+        st.sidebar.caption("Estimated cost unavailable until pricing is configured.")
+
+    dashboard_rows = []
+    for item in reversed(history[-10:]):
+        dashboard_rows.append({
+            "timestamp": item.get("timestamp"),
+            "country": item.get("country"),
+            "provider": item.get("provider"),
+            "model": item.get("model_name"),
+            "skill": item.get("analysis_skill"),
+            "input_tokens": item.get("input_tokens"),
+            "output_tokens": item.get("output_tokens"),
+            "total_tokens": item.get("total_tokens"),
+            "latency_seconds": item.get("latency_seconds"),
+            "estimated_cost_usd": item.get("estimated_cost_usd"),
+        })
+
+    st.sidebar.dataframe(pd.DataFrame(dashboard_rows), use_container_width=True, hide_index=True)
 
 st.set_page_config(page_title="GFW Analysis App", layout="wide")
 
@@ -177,6 +238,8 @@ if api_key_input:
     elif llm_provider == "Gemini":
         os.environ["GEMINI_API_KEY"] = api_key_input
 
+render_usage_dashboard()
+
 st.title("Event Source Reporter")
 st.markdown(
     "Upload a structured event CSV to filter records, generate AI analysis, and download a PDF report."
@@ -207,6 +270,16 @@ if uploaded_file is not None:
     selected_country = st.selectbox("Select a country for analysis", ["-- Select --"] + countries)
     
     if selected_country != "-- Select --":
+        additional_context = st.text_area(
+            "Additional context for the report",
+            height=180,
+            placeholder=(
+                "Paste optional newspaper notes, NGO summaries, field observations, or other contextual text here. "
+                "This will be used as secondary context for the report."
+            ),
+            help="Optional free-text context that complements the structured event data.",
+        )
+
         if st.button("Generate Analysis and Report"):
             # Check for API Key
             if not os.getenv(f"{llm_provider.upper()}_API_KEY"):
@@ -267,13 +340,16 @@ if uploaded_file is not None:
             with st.spinner(
                 f"Generating analytical text with {llm_provider} ({model_name}) using the {analysis_skill} skill..."
             ):
-                report_text = generate_report_text(
+                report_result = generate_report_text(
                     selected_country,
                     summary_women,
                     summary_other,
                     provider=llm_provider,
                     analysis_skill=analysis_skill,
+                    additional_context=additional_context,
                 )
+            report_text = report_result["text"]
+            usage = report_result.get("usage")
 
             st.session_state.report_result = {
                 "file_signature": file_signature,
@@ -281,6 +357,7 @@ if uploaded_file is not None:
                 "provider": llm_provider,
                 "model_name": model_name,
                 "analysis_skill": analysis_skill,
+                "additional_context": additional_context,
                 "women_events_count": len(df_women),
                 "other_events_count": len(df_other),
                 "timeline_data": timeline_data,
@@ -291,10 +368,18 @@ if uploaded_file is not None:
                 "map_available": map_available,
                 "map_data": map_data,
                 "report_text": report_text,
+                "usage": usage,
                 "pdf_name": f"Report_{selected_country.replace(' ', '_')}.pdf",
                 "pdf_bytes": generate_pdf_bytes(selected_country, report_text),
             }
             st.session_state.save_message = None
+            if usage:
+                st.session_state.usage_history.append({
+                    "timestamp": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "country": selected_country,
+                    "analysis_skill": analysis_skill,
+                    **usage,
+                })
 
         result = st.session_state.report_result
         matches_current_selection = (
@@ -303,6 +388,7 @@ if uploaded_file is not None:
             and result["country"] == selected_country
             and result["provider"] == llm_provider
             and result["analysis_skill"] == analysis_skill
+            and result.get("additional_context", "") == additional_context
         )
 
         if matches_current_selection:

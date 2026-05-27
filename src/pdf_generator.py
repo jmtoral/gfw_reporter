@@ -106,7 +106,8 @@ def markdown_to_html(markdown_text: str) -> str:
     def flush_list():
         nonlocal list_buffer
         if list_buffer:
-            html_parts.append("<ul>" + "".join(f"<li>{format_inline_markdown(item)}</li>" for item in list_buffer) + "</ul>")
+            for item in list_buffer:
+                html_parts.append(f"<p>- {format_inline_markdown(item)}</p>")
             list_buffer = []
 
     def flush_table():
@@ -161,7 +162,7 @@ def markdown_to_html(markdown_text: str) -> str:
     return "".join(html_parts)
 
 
-def build_pdf(country: str, report_text: str) -> PDFReport:
+def build_pdf(country: str, report_text: str, date_range: str | None = None) -> PDFReport:
     pdf = PDFReport()
     pdf.set_auto_page_break(auto=True, margin=18)
     pdf.set_margins(PAGE_MARGIN, 12, PAGE_MARGIN)
@@ -174,6 +175,8 @@ def build_pdf(country: str, report_text: str) -> PDFReport:
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(*BRAND_MUTED)
     pdf.cell(0, 6, safe_text(f"Generated on: {format_event_date(datetime.now())}"), new_x="LMARGIN", new_y="NEXT")
+    if date_range:
+        pdf.cell(0, 6, safe_text(f"Dataset range: {date_range}"), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
 
     html_text = markdown_to_html(report_text)
@@ -184,20 +187,19 @@ def build_pdf(country: str, report_text: str) -> PDFReport:
             "h2": FontFace(family="Arial", emphasis="B", size_pt=13, color=BRAND_PRIMARY),
             "h3": FontFace(family="Arial", emphasis="B", size_pt=11, color=BRAND_ACCENT),
             "p": FontFace(family="Arial", size_pt=10.5, color=(30, 30, 30)),
-            "li": FontFace(family="Arial", size_pt=10.5, color=(30, 30, 30)),
         },
     )
     return pdf
 
 
-def generate_pdf_report(country: str, report_text: str, output_path: str):
-    pdf = build_pdf(country, report_text)
+def generate_pdf_report(country: str, report_text: str, output_path: str, date_range: str | None = None):
+    pdf = build_pdf(country, report_text, date_range=date_range)
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     pdf.output(output_path)
 
 
-def generate_pdf_bytes(country: str, report_text: str) -> bytes:
-    pdf = build_pdf(country, report_text)
+def generate_pdf_bytes(country: str, report_text: str, date_range: str | None = None) -> bytes:
+    pdf = build_pdf(country, report_text, date_range=date_range)
     raw_output = pdf.output(dest="S")
     return bytes(raw_output) if isinstance(raw_output, (bytes, bytearray)) else str(raw_output).encode("latin-1")

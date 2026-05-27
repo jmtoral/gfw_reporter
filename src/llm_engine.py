@@ -84,6 +84,8 @@ def build_prompts(
     other_protests_summary: str,
     analysis_skill: str = "General",
     additional_context: str = "",
+    women_peak_dates_summary: str = "",
+    overall_peak_dates_summary: str = "",
 ):
     """Build system and user prompts for the selected analysis lens."""
     base_system_prompt = (
@@ -101,6 +103,12 @@ def build_prompts(
 
     Context regarding other relevant protests:
     {other_protests_summary}
+
+    Peak dates for women's mobilizations:
+    {women_peak_dates_summary or "No peak dates available."}
+
+    Peak dates for all protests in scope:
+    {overall_peak_dates_summary or "No peak dates available."}
     """
 
     additional_context_block = ""
@@ -111,11 +119,12 @@ def build_prompts(
     {additional_context.strip()}
     """
 
-    if analysis_skill == "Gender and Women Focus":
+    if analysis_skill == "Women and Gender Focus":
         system_prompt = (
             base_system_prompt
             + " Prioritize gender analysis, women's rights, intersectional risks, civic space, "
-            + "and the specific experiences of women and girls. Avoid unsupported claims."
+            + "and the experiences of women and girls. Use a neutral, analytical tone with few adjectives. "
+            + "Avoid rhetorical or overly dramatic phrasing. Avoid unsupported claims."
         )
         prompt = f"""
         {base_context}
@@ -130,6 +139,7 @@ def build_prompts(
         scale, and geography of mobilization. Then explain the most salient protest trends connected to
         women and girls, such as gender-based violence, public safety, institutional accountability,
         health, education, labor, reproductive rights, or political participation, only when supported by the data.
+        Explicitly mention the dates with the highest protest activity overall and the dates with the highest women's protest activity when those dates are available, and integrate them into prose paragraphs rather than bullets.
         Compare women's mobilizations against other protests only when it helps explain differences in patterns,
         risks, demands, actors, or state response.
         Include a brief assessment of whether intersectional agendas such as LGBTQI+ rights, Indigenous rights,
@@ -153,6 +163,8 @@ def build_prompts(
         Prioritize specific named groups over generic categories. For example, prefer a concrete organization name over labels such as
         "protesters", "women", "students", "police", or "community members" whenever a named group is available.
         Order the table so that the most specific and most salient organizations appear first, followed by broader or less specific actors.
+        Within that ordering, place rows with usable contact information first, then rows with clear geography, and then the remaining rows.
+        Keep one row per organization whenever possible and avoid duplicate or near-duplicate entries.
         If multiple organizations are detected, include all of them rather than a short sample.
         In the Geography column, include the most relevant location, city, district, department, state, or country associated with the actor
         based on the available event summaries. If no geographic association can be inferred from the data, write `Not specified in ACLED data`.
@@ -162,10 +174,13 @@ def build_prompts(
         - Base every claim on the provided event summaries.
         - Treat the ACLED event summaries as the primary source and the user-provided external context as secondary context.
         - Preserve the three numbered section headings exactly as written above.
+        - Whenever March 8th appears in the analysis, explicitly identify it as International Women's Day.
         - If the data is limited, say so briefly inside the relevant section.
         - Use paragraph-style analysis in sections 1 and 2.
+        - Keep the writing concise, neutral, and analytical. Use fewer adjectives and avoid advocacy-style wording.
         - Do not include a separate executive summary.
         - In section 3, avoid collapsing distinct organizations into one generic row when the notes mention separate groups.
+        - Do not use bullet lists in sections 1 or 2.
         - Omit any text that is not part of the report.
         """
     else:
@@ -181,6 +196,7 @@ def build_prompts(
 
         STRICT RULES:
         - Treat the ACLED event summaries as the primary source.
+        - Mention the dates with the highest protest activity overall and for women's mobilizations when those dates are available, and include them in prose rather than bullets.
         - If additional external context is provided by the user, use it carefully as secondary context and do not invent unsupported claims.
         - Omit any text that is not part of the report (no conversational introductions or conclusions).
         """
@@ -195,6 +211,8 @@ def generate_report_text(
     provider: str = "OpenAI",
     analysis_skill: str = "General",
     additional_context: str = "",
+    women_peak_dates_summary: str = "",
+    overall_peak_dates_summary: str = "",
 ) -> str:
     """Calls the selected LLM provider to generate the report text and extract entities/topics."""
     system_prompt, prompt = build_prompts(
@@ -203,6 +221,8 @@ def generate_report_text(
         other_protests_summary,
         analysis_skill=analysis_skill,
         additional_context=additional_context,
+        women_peak_dates_summary=women_peak_dates_summary,
+        overall_peak_dates_summary=overall_peak_dates_summary,
     )
     model_name = get_model_name(provider)
     

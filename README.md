@@ -10,7 +10,7 @@ The current implementation is optimized for ACLED-like CSV files, especially sou
 - Separates women- and gender-related mobilizations from other protests.
 - Generates visual summaries for time trends, top actors, top geographies, and map distribution.
 - Produces an LLM-written analytical report using OpenAI, Anthropic, or Gemini.
-- Supports a dedicated `Gender and Women Focus` analysis skill with a fixed report structure.
+- Supports a dedicated `Women and Gender Focus` analysis skill with a fixed report structure.
 - Accepts optional free-text contextual notes, such as newspaper excerpts or NGO summaries, before report generation.
 - Exports the result to PDF.
 - Keeps the latest result visible in the app after download.
@@ -67,6 +67,18 @@ GEMINI_API_KEY=your_key
 
 You can also paste the selected provider key directly in the Streamlit sidebar at runtime.
 
+### Conda alternative
+
+If you prefer Conda, you can create and use an environment like this:
+
+```bash
+conda create -n gfw_reporter python=3.12
+conda activate gfw_reporter
+pip install -r requirements.txt
+```
+
+If your team standardizes on Conda, this is a good default because it makes onboarding easier across machines.
+
 ## Run on another computer
 
 To use this project on someone else's computer:
@@ -118,6 +130,19 @@ streamlit run app.py
 http://localhost:8501
 ```
 
+### Run on another computer with Conda
+
+If the other person uses Conda, they can also do:
+
+```bash
+git clone https://github.com/jmtoral/gfw_reporter.git
+cd gfw_reporter
+conda create -n gfw_reporter python=3.12
+conda activate gfw_reporter
+pip install -r requirements.txt
+streamlit run app.py
+```
+
 ## Run the app
 
 ```bash
@@ -153,6 +178,42 @@ longitude
 5. Generate the report.
 6. Download the PDF or save the report bundle locally.
 
+## Additional context notes
+
+The app includes an optional free-text field called `Additional context for the report`.
+
+Use it for:
+
+- newspaper excerpts
+- NGO summaries
+- field observations
+- contextual notes from researchers
+- short media digests
+
+Recommended guidance:
+
+- paste plain text instead of raw HTML
+- include source names in the text if they matter
+- separate different notes with blank lines
+- keep the text focused on the selected country and time period
+- prefer concise excerpts or summaries over extremely long dumps
+- short curated excerpts usually work better than copying entire articles
+- if you paste quoted language, keep only the parts that are analytically relevant
+
+Current behavior:
+
+- the app does not require a strict template for these notes
+- the notes are treated as secondary context, while the uploaded event CSV remains the primary source
+- the model is instructed not to invent sources beyond what the user pasted
+
+Practical limitations:
+
+- there is no hard schema, but very long notes will increase token usage and cost
+- if the notes mix multiple countries or time periods, the report may become less precise
+- URLs alone are not enough context unless the user also pastes the relevant text or summary
+- if the notes contain conflicting claims, the model may reflect that ambiguity rather than resolve it
+- the app does not currently validate source quality, so users should curate notes before pasting them
+
 ## How to adapt this to other sources
 
 To generalize the reporter beyond ACLED-like data, the usual path is:
@@ -166,4 +227,4 @@ To generalize the reporter beyond ACLED-like data, the usual path is:
 
 - The app currently generates analysis from the uploaded dataset only.
 - Broader media or civil society context is not fetched automatically from the internet.
-- The `Gender and Women Focus` skill is designed to stay grounded in the uploaded event summaries and avoid unsupported claims.
+- The `Women and Gender Focus` skill is designed to stay grounded in the uploaded event summaries and avoid unsupported claims.

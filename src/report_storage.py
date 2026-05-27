@@ -18,18 +18,25 @@ def save_report_bundle(result: dict, base_dir: str = "saved_reports") -> Path:
 
     markdown_path = report_dir / "report.md"
     pdf_path = report_dir / result["pdf_name"]
+    docx_path = report_dir / result["docx_name"]
     metadata_path = report_dir / "metadata.json"
 
     markdown_path.write_text(result["report_text"], encoding="utf-8")
     pdf_path.write_bytes(result["pdf_bytes"])
+    if result.get("docx_bytes"):
+        docx_path.write_bytes(result["docx_bytes"])
 
     metadata = {
         "country": result["country"],
+        "date_range": result.get("date_range"),
         "provider": result["provider"],
         "model_name": result["model_name"],
         "analysis_skill": result["analysis_skill"],
+        "report_mode": result.get("report_mode"),
         "women_events_count": result["women_events_count"],
         "other_events_count": result["other_events_count"],
+        "women_peak_dates": result.get("women_peak_dates"),
+        "overall_peak_dates": result.get("overall_peak_dates"),
         "saved_at": datetime.now().isoformat(timespec="seconds"),
     }
     if result.get("usage"):

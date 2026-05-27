@@ -6,3 +6,6 @@ google-genai
 fpdf2
 python-dotenv
 python-docx
+matplotlib
+altair
+pydeck

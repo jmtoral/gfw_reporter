@@ -92,7 +92,8 @@ def build_prompts(
         "You are an expert data analyst and political scientist. IMPORTANT: "
         "Your response must contain ONLY the requested Markdown report. Do not include any "
         "greetings, introductions, or conversational fillers like 'Here is the report', "
-        "'As an analyst', or 'I am a researcher'. Start directly with the title of the first section."
+        "'As an analyst', or 'I am a researcher'. Start directly with the title of the first section. "
+        "STRICT STYLE RULES: Do NOT use em dashes (—). Do NOT use the word 'vibrant'. Use the absolute minimum number of adjectives possible."
     )
 
     base_context = f"""

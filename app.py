@@ -480,7 +480,7 @@ def render_report_result(result):
     st.subheader("Report Draft")
     final_report_text = result["report_text"]
     if result.get("report_mode") == "LLM report":
-        final_report_text += "\n\n---\n*Disclaimer: This content was created by AI and can make mistakes.*"
+        final_report_text += "\n\n---\n*Notice: This content was drafted by an AI model based on the provided event summaries. AI can occasionally produce errors or misinterpret context.*"
     parsed_table = extract_first_markdown_table(result["report_text"])
     if parsed_table and "Contact" in parsed_table["dataframe"].columns:
         st.markdown("#### Review Contacts Before PDF")
@@ -1032,3 +1032,7 @@ if uploaded_file is not None:
             render_report_result(result)
         elif result and result["file_signature"] == file_signature:
             st.info("Generate the analysis again to refresh the saved result for the current visualization settings.")
+
+st.markdown("---")
+st.markdown("<div style='text-align: center; color: gray;'><small>Made with ❤️ by the Gender Data Hub of the Global Fund for Women</small></div>", unsafe_allow_html=True)
+

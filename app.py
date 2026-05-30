@@ -479,6 +479,8 @@ def render_report_result(result):
     st.write("---")
     st.subheader("Report Draft")
     final_report_text = result["report_text"]
+    if result.get("report_mode") == "LLM report":
+        final_report_text += "\n\n---\n*Disclaimer: This content was created by AI and can make mistakes.*"
     parsed_table = extract_first_markdown_table(result["report_text"])
     if parsed_table and "Contact" in parsed_table["dataframe"].columns:
         st.markdown("#### Review Contacts Before PDF")
